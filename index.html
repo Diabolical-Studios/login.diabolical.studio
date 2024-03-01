@@ -136,6 +136,9 @@
             /* Darker on hover */
         }
     </style>
+
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+
 </head>
 
 <body>
@@ -159,63 +162,44 @@
         </div>
     </div>
 
-    <div class="form-container">
-        <form id="login-form">
-            <input type="email" id="email" class="form-field" placeholder="Email" required>
-            <input type="password" id="password" class="form-field" placeholder="Password" required>
-            <button type="submit" class="form-button">Log In</button>
-        </form>
-    </div>
-
-    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-
+    <!-- Place this script right before the closing body tag -->
     <script>
-        window.addEventListener('DOMContentLoaded', (event) => {
-            if (window.netlifyIdentity) {
-                window.netlifyIdentity.on('init', user => {
-                    console.log(user); // Log the current user or null
-                });
-
-                window.netlifyIdentity.on('login', user => {
-                    console.log('Login event detected:', user);
-                    // You might want to redirect the user or close the modal here
-                    window.netlifyIdentity.close();
-                    // Redirect to a specific URL after login
-                    window.location.href = '/user-dashboard';
-                });
-
-                window.netlifyIdentity.on('logout', () => {
-                    console.log('Logout event detected');
-                    // Redirect or perform actions after logout
-                    window.location.href = '/';
-                });
-            }
-        });
-    </script>
-
-
-    <script>
-        document.getElementById('login-form').addEventListener('submit', function (e) {
-            e.preventDefault();
-            var email = document.getElementById('email').value;
-            var password = document.getElementById('password').value;
-
-            netlifyIdentity.open('login'); // Optionally open the modal to the login tab
-            netlifyIdentity.on('login', (user) => {
-                console.log('logged in', user);
-            });
-
-            // Custom login with Netlify Identity
-            netlifyIdentity.authenticate({ provider: "email", email: email, password: password }, function (err, data) {
-                console.log('Logged in:', data || err);
-                if (!err) {
-                    // Handle successful login
-                    // e.g., redirect or close modal
-                    window.location.href = '/user-dashboard';
+        if (window.netlifyIdentity) {
+            window.netlifyIdentity.on('init', user => {
+                if (user) {
+                    // User is logged in, redirect to /downloads
+                    window.location.href = '/downloads';
+                } else {
+                    // User is not logged in, open the login modal
+                    window.netlifyIdentity.open('login');
                 }
             });
-        });
+
+            window.netlifyIdentity.on('login', user => {
+                // On login, redirect to /downloads
+                window.location.href = '/downloads';
+            });
+        } else {
+            document.addEventListener('DOMContentLoaded', (event) => {
+                window.netlifyIdentity = netlifyIdentityWidget;
+                netlifyIdentityWidget.on('init', user => {
+                    if (user) {
+                        // User is logged in, redirect to /downloads
+                        window.location.href = '/downloads';
+                    } else {
+                        // User is not logged in, open the login modal
+                        netlifyIdentityWidget.open('login');
+                    }
+                });
+
+                netlifyIdentityWidget.on('login', user => {
+                    // On login, redirect to /downloads
+                    window.location.href = '/downloads';
+                });
+            });
+        }
     </script>
+
 
     <script id="__NEXT_DATA__" type="application/json">
             {
