@@ -1,4 +1,4 @@
-document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+document.getElementById('uploadForm').addEventListener('submit', async function (event) {
     event.preventDefault();
 
     const sshKey = document.getElementById('sshKey').files[0];
@@ -13,7 +13,7 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
     try {
         const response = await fetch('/.netlify/functions/uploadGame', {
             method: 'POST',
-            body: formData
+            body: formData  // send as FormData
         });
         const result = await response.json();
         alert('Upload successful: ' + result.message);

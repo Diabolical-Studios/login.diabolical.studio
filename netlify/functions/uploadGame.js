@@ -1,40 +1,68 @@
-const process = require('process');
+const Busboy = require('busboy');
 const { NodeSSH } = require('node-ssh');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 
-exports.handler = async function(event, context) {
+exports.handler = async (event, context) => {
     if (event.httpMethod !== 'POST') {
         return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
-    const { username, publicIP, uploadPath, sshKey, gameFile } = JSON.parse(event.body);
+    const busboy = new Busboy({ headers: event.headers });
 
-    const ssh = new NodeSSH();
-    try {
-        // Connect to the server using SSH
-        await ssh.connect({
-            host: publicIP,
-            username: username,
-            privateKey: sshKey
+    // Create promises to handle asynchronous file processing
+    const fileWrites = [];
+    const formData = {};
+
+    return new Promise((resolve, reject) => {
+        busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+            const saveToPath = path.join(os.tmpdir(), filename);
+            const writeStream = fs.createWriteStream(saveToPath);
+            file.pipe(writeStream);
+
+            fileWrites.push(new Promise((resolve, reject) => {
+                file.on('end', () => writeStream.end());
+                writeStream.on('finish', () => resolve({ fieldname, saveToPath }));
+                writeStream.on('error', reject);
+            }));
         });
 
-        // Simulated upload - replace with actual file handling logic
-        // For real-world usage, consider using multipart/form-data parsing libraries to handle uploads
+        busboy.on('field', (fieldname, value) => {
+            formData[fieldname] = value;
+        });
 
-        // Your SSH upload logic here
-        console.log('Simulated file upload:', gameFile);
+        busboy.on('finish', async () => {
+            try {
+                const files = await Promise.all(fileWrites);
+                const ssh = new NodeSSH();
+                await ssh.connect({
+                    host: formData.publicIP,
+                    username: formData.username,
+                    privateKey: fs.readFileSync(files.find(f => f.fieldname === 'sshKey').saveToPath)
+                });
 
-        // Closing the SSH connection
-        ssh.dispose();
+                for (const file of files) {
+                    if (file.fieldname === 'gameFile') {
+                        await ssh.putFile(file.saveToPath, formData.uploadPath);
+                    }
+                }
 
-        return {
-            statusCode: 200,
-            body: JSON.stringify({ message: 'File uploaded successfully' })
-        };
-    } catch (error) {
-        console.error('SSH Error:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ message: 'Failed to upload file' })
-        };
-    }
+                ssh.dispose();
+                resolve({
+                    statusCode: 200,
+                    body: JSON.stringify({ message: "File uploaded successfully!" })
+                });
+            } catch (error) {
+                console.error('SCP Upload Failed:', error);
+                reject({
+                    statusCode: 500,
+                    body: JSON.stringify({ message: "Failed to upload file." })
+                });
+            }
+        });
+
+        busboy.write(event.body);
+        busboy.end();
+    });
 };
