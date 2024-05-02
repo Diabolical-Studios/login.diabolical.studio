@@ -4,7 +4,7 @@
 <head>
     <meta charSet="utf-8" />
     <meta name="viewport" content="width=device-width" />
-    <title>Diabolical Studios | Upload Game</title>
+    <title>Diabolical Studios | Login</title>
     <meta name="description"
         content="Art Journal with an infinite grid of CGI snaps and stories on the flip side. The sounds section is dedicated to a small set of artworks where an audio track is essential. By Anton Sokolov, software product designer at JetBrains. " />
     <meta name="og:title" content="Diabolical Studios | Login" />
@@ -38,7 +38,106 @@
     <script src="/_next/static/CkHO7FSEYQSCCJ_iHxZXE/_buildManifest.js" defer=""></script>
     <script src="/_next/static/CkHO7FSEYQSCCJ_iHxZXE/_ssgManifest.js" defer=""></script>
 
-    <link rel="stylesheet" href="upload/styles.css">
+    <style>
+        :root {
+            --font-basic: 'DMSans', sans-serif;
+            /* Ensure this is the correct name as declared in @font-face */
+        }
+
+        @font-face {
+            font-family: DMSans;
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url(/_next/static/media/DMSans.ttf) format("truetype");
+        }
+
+        .form-container {
+            background: rgba(53, 53, 53, 0.4);
+            border-radius: 4px;
+            width: fit-content;
+            inset: 12px 24px auto 16px;
+            transform-origin: left bottom;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            outline-width: 1px;
+            outline-color: #636363;
+            outline-style: solid;
+            padding: 20px;
+            /* Added padding for internal spacing */
+        }
+
+        #login-form {
+            display: flex;
+            flex-direction: column;
+            /* Changed to column for vertical layout */
+            gap: 12px;
+            /* Added gap for spacing between fields */
+        }
+
+        .form-field {
+            background: rgba(53, 53, 53, 0.4);
+            outline-width: 1px;
+            outline-color: #636363;
+            outline-style: solid;
+            border: none;
+            color: #FFF;
+            font-family: var(--font-basic);
+            font-size: 16px;
+            padding: 12px;
+            border-radius: 4px;
+            width: calc(100% - 24px);
+            margin-bottom: 16px;
+            transition: background-color 0.4s, border-color 0.4s;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: -webkit-fill-available;
+        }
+
+        .form-field:focus {
+            outline: none;
+            /* Ensure outline is disabled on focus */
+        }
+
+        /* Style adjustments for when input fields are autofilled */
+        .form-field:-webkit-autofill,
+        .form-field:-webkit-autofill:hover,
+        .form-field:-webkit-autofill:focus,
+        .form-field:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px rgb(0, 0, 0) inset !important;
+            -webkit-text-fill-color: #fff !important;
+        }
+
+        .form-button {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 15px;
+            /* Adjusted padding for uniformity */
+            border-radius: 4px;
+            color: #fff;
+            font-family: var(--font-basic);
+            font-size: 16px;
+            background-color: rgba(83, 83, 83, 0.4);
+            /* Initial button background */
+            border: none;
+            /* Remove border */
+            transition: .4s;
+            transition-property: background-color, color, border-color;
+            /* Adjusted width to match form-field */
+        }
+
+        .form-button:hover {
+            background-color: rgba(83, 83, 83, 0.8);
+            /* Darker on hover */
+        }
+    </style>
+
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 
 </head>
 
@@ -62,34 +161,45 @@
             </ul>
         </div>
     </div>
-    <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 40vw;">
-        <h1>Game Upload Console</h1>
-        <form id="uploadForm">
-            <div>
-                <label for="sshKey">SSH Key:</label>
-                <input type="file" id="sshKey" required>
-            </div>
-            <div>
-                <label for="gameFile">Game File (ZIP):</label>
-                <input type="file" id="gameFile" required>
-            </div>
-            <div>
-                <label for="username">Username:</label>
-                <input type="text" id="username" value="opc" placeholder="opc" required>
-            </div>
-            <div>
-                <label for="publicIP">Server Public IP:</label>
-                <input type="text" id="publicIP" placeholder="89.168.71.146" required>
-            </div>
-            <div>
-                <label for="uploadPath">Upload Path:</label>
-                <input type="text" id="uploadPath" placeholder="/var/www/api.diabolical.studio" required>
-            </div>
-            <button type="submit">Upload Game</button>
-        </form>
-    </div>
 
-    <script src="upload/script.js"></script>
+    <!-- Place this script right before the closing body tag -->
+    <script>
+        if (window.netlifyIdentity) {
+            window.netlifyIdentity.on('init', user => {
+                if (user) {
+                    // User is logged in, redirect to /downloads
+                    window.location.href = '/downloads';
+                } else {
+                    // User is not logged in, open the login modal
+                    window.netlifyIdentity.open('login');
+                }
+            });
+
+            window.netlifyIdentity.on('login', user => {
+                // On login, redirect to /downloads
+                window.location.href = '/downloads';
+            });
+        } else {
+            document.addEventListener('DOMContentLoaded', (event) => {
+                window.netlifyIdentity = netlifyIdentityWidget;
+                netlifyIdentityWidget.on('init', user => {
+                    if (user) {
+                        // User is logged in, redirect to /downloads
+                        window.location.href = '/downloads';
+                    } else {
+                        // User is not logged in, open the login modal
+                        netlifyIdentityWidget.open('login');
+                    }
+                });
+
+                netlifyIdentityWidget.on('login', user => {
+                    // On login, redirect to /downloads
+                    window.location.href = '/downloads';
+                });
+            });
+        }
+    </script>
+
 
     <script id="__NEXT_DATA__" type="application/json">
             {
